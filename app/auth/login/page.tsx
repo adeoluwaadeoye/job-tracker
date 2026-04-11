@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Briefcase, ArrowRight, Eye, EyeOff } from "lucide-react";
@@ -10,14 +10,27 @@ import { FcGoogle } from "react-icons/fc";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { status } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [oauthLoading, setOauthLoading] = useState<"github" | "google" | null>(
-    null
-  );
+  const [oauthLoading, setOauthLoading] = useState<"github" | "google" | null>(null);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard");
+    }
+  }, [status, router]);
+
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <div className="w-full max-w-sm flex items-center justify-center py-20">
+        <span className="w-6 h-6 border-2 border-border border-t-foreground rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +60,8 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.refresh();
+    router.replace("/dashboard");
   };
 
   const handleOAuth = async (provider: "github" | "google") => {
@@ -57,7 +71,6 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-sm">
-      {/* Logo */}
       <div className="flex flex-col items-center mb-8">
         <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center mb-4">
           <Briefcase className="w-5 h-5 text-primary-foreground" />
@@ -71,7 +84,6 @@ export default function LoginPage() {
       </div>
 
       <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-4">
-        {/* OAuth */}
         <div className="flex flex-col gap-3">
           <button
             onClick={() => handleOAuth("github")}
@@ -99,14 +111,12 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Divider */}
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-border" />
           <span className="text-xs text-muted-foreground">or</span>
           <div className="flex-1 h-px bg-border" />
         </div>
 
-        {/* Credentials form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-muted-foreground">
