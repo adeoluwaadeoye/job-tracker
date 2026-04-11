@@ -39,7 +39,10 @@ const JobSchema = new Schema<IJob>(
   { timestamps: true }
 );
 
-const Job: Model<IJob> =
-  mongoose.models.Job || mongoose.model<IJob>("Job", JobSchema);
+if (mongoose.models.Job) {
+  delete mongoose.models.Job;
+}
+
+const Job: Model<IJob> = mongoose.model<IJob>("Job", JobSchema);
 
 export default Job;
