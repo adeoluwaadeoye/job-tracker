@@ -6,9 +6,6 @@ import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "@/lib/mongodb-client";
 import bcrypt from "bcryptjs";
 
-/**
- * ✅ Extend NextAuth session type (clean + scalable)
- */
 declare module "next-auth" {
   interface Session {
     user: {
@@ -54,7 +51,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!user || !user.password) return null;
 
         const isValid = await bcrypt.compare(password, user.password);
-
         if (!isValid) return null;
 
         if (!user.emailVerified) {
@@ -81,12 +77,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
         token.picture = user.image;
+      }
+      if (account) {
+        token.accessToken = account.access_token;
       }
       return token;
     },
