@@ -1,10 +1,16 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER!,
+    pass: process.env.GMAIL_APP_PASSWORD!,
+  },
+});
 
 export async function sendVerificationEmail(email: string, code: string, name: string) {
-  await resend.emails.send({
-    from: process.env.EMAIL_FROM!,
+  await transporter.sendMail({
+    from: `"JobTracker" <${process.env.GMAIL_USER}>`,
     to: email,
     subject: "Verify your JobTracker account",
     html: `
@@ -27,8 +33,8 @@ export async function sendVerificationEmail(email: string, code: string, name: s
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string) {
-  await resend.emails.send({
-    from: process.env.EMAIL_FROM!,
+  await transporter.sendMail({
+    from: `"JobTracker" <${process.env.GMAIL_USER}>`,
     to: email,
     subject: "Reset your JobTracker password",
     html: `
