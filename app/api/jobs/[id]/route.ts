@@ -3,18 +3,14 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 import Job from "@/models/Job";
 
-type Context = {
-  params: { id: string };
-};
-
 export async function PATCH(
   req: NextRequest,
-  { params }: Context
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
-    const { id } = params;
+    const { id } = await context.params;
 
     if (!mongoose.isValidObjectId(id)) {
       return NextResponse.json(
@@ -70,12 +66,12 @@ export async function PATCH(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: Context
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
-    const { id } = params;
+    const { id } = await context.params;
 
     if (!mongoose.isValidObjectId(id)) {
       return NextResponse.json(
