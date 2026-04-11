@@ -51,18 +51,21 @@ export default function BoardPage() {
             My applications
           </h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {jobs.length} total ·{" "}
-            {jobs.filter((j) => j.status === "interviewing").length} interviewing
+            {jobs?.length ?? 0} total ·{" "}
+            {jobs?.filter((j) => j.status === "interviewing").length ?? 0} interviewing
           </p>
         </div>
+
+        {/* ✅ FIXED ROUTE */}
         <Link
-          href="/dashboard/dashboard/add"
+          href="/dashboard/add"
           className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
         >
           <PlusCircle className="w-4 h-4" />
           Add Job
         </Link>
       </div>
+
       <JobBoard jobs={jobs} />
     </motion.div>
   );
