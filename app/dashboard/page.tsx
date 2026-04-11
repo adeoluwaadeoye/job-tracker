@@ -56,7 +56,6 @@ export default function BoardPage() {
           </p>
         </div>
 
-        {/* ✅ FIXED ROUTE */}
         <Link
           href="/dashboard/add"
           className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"

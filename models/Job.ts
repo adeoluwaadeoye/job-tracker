@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export type JobStatus = "saved" | "applied" | "interviewing" | "offer" | "rejected";
 
 export interface IJob extends Document {
+  userEmail: string;
   title: string;
   company: string;
   location: string;
@@ -19,6 +20,7 @@ export interface IJob extends Document {
 
 const JobSchema = new Schema<IJob>(
   {
+    userEmail:      { type: String, required: true },
     title:          { type: String, required: true, trim: true },
     company:        { type: String, required: true, trim: true },
     location:       { type: String, default: "" },
