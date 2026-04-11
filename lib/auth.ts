@@ -5,6 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "@/lib/mongodb-client";
 import bcrypt from "bcryptjs";
+import { authConfig } from "./auth.config";
 
 declare module "next-auth" {
   interface Session {
@@ -15,6 +16,8 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
+
   adapter: MongoDBAdapter(clientPromise),
 
   providers: [
@@ -45,7 +48,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const client = await clientPromise;
         const db = client.db();
-
         const user = await db.collection("users").findOne({ email });
 
         if (!user || !user.password) return null;
@@ -67,16 +69,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
 
-  pages: {
-    signIn: "/auth/login",
-    error: "/auth/error",
-  },
-
-  session: {
-    strategy: "jwt",
-  },
-
   callbacks: {
+    ...authConfig.callbacks,
+
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
@@ -105,6 +100,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     enableWebAuthn: false,
   },
 
-  trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
 });
