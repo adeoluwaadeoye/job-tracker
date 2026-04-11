@@ -1,14 +1,23 @@
-import NextAuth, { type NextAuthConfig } from "next-auth";
+import NextAuth, { type DefaultSession } from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "@/lib/mongodb-client";
 import bcrypt from "bcryptjs";
-import type { JWT } from "next-auth/jwt";
-import type { Session, User } from "next-auth";
 
-export const authOptions: NextAuthConfig = {
+/**
+ * ✅ Extend NextAuth session type (clean + scalable)
+ */
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+    } & DefaultSession["user"];
+  }
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: MongoDBAdapter(clientPromise),
 
   providers: [
@@ -30,21 +39,21 @@ export const authOptions: NextAuthConfig = {
       },
 
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        const email = credentials?.email;
+        const password = credentials?.password;
+
+        if (typeof email !== "string" || typeof password !== "string") {
+          return null;
+        }
 
         const client = await clientPromise;
         const db = client.db();
 
-        const user = await db.collection("users").findOne({
-          email: credentials.email,
-        });
+        const user = await db.collection("users").findOne({ email });
 
         if (!user || !user.password) return null;
 
-        const isValid = await bcrypt.compare(
-          String(credentials.password),
-          String(user.password)
-        );
+        const isValid = await bcrypt.compare(password, user.password);
 
         if (!isValid) return null;
 
@@ -62,47 +71,32 @@ export const authOptions: NextAuthConfig = {
     }),
   ],
 
-  session: {
-    strategy: "jwt",
-  },
-
   pages: {
     signIn: "/auth/login",
     error: "/auth/error",
   },
 
+  session: {
+    strategy: "jwt",
+  },
+
   callbacks: {
-    async jwt({
-      token,
-      user,
-    }: {
-      token: JWT;
-      user?: User;
-    }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.email = user.email;
         token.name = user.name;
+        token.email = user.email;
         token.picture = user.image;
       }
       return token;
     },
 
-    async session({
-      session,
-      token,
-    }: {
-      session: Session;
-      token: JWT;
-    }) {
-      if (token) {
-        session.user = {
-          ...session.user,
-          id: token.id as string,
-          email: token.email as string,
-          name: token.name as string,
-          image: token.picture as string,
-        };
+    async session({ session, token }) {
+      if (session.user && token) {
+        session.user.id = token.id as string;
+        session.user.name = token.name as string;
+        session.user.email = token.email as string;
+        session.user.image = token.picture as string;
       }
       return session;
     },
@@ -110,9 +104,4 @@ export const authOptions: NextAuthConfig = {
 
   trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
-};
-
-const handler = NextAuth(authOptions);
-
-export const { handlers, auth, signIn, signOut } = handler;
-export { handler as GET, handler as POST };
+});

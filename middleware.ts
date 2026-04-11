@@ -10,20 +10,19 @@ export async function middleware(req: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  const isDashboardRoute = pathname.startsWith("/dashboard");
-  const isAuthRoute = pathname.startsWith("/auth");
+  const isDashboard = pathname.startsWith("/dashboard");
+  const isAuthPage = pathname.startsWith("/auth");
 
-  // 🔥 prevent false-negative redirects during edge evaluation
-  const isStatic = pathname.startsWith("/_next") || pathname.includes(".");
-  if (isStatic) return NextResponse.next();
+  // ⛔ HARD GUARD: wait-safe redirect logic
+  const isAuthenticated = !!token?.email;
 
-  if (isDashboardRoute && !token) {
+  if (isDashboard && !isAuthenticated) {
     const url = new URL("/auth/login", req.url);
     url.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (isAuthRoute && token) {
+  if (isAuthPage && isAuthenticated) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
