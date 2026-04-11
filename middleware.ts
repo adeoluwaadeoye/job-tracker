@@ -3,23 +3,27 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 export async function middleware(req: NextRequest) {
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET, // ✅ FIXED (was AUTH_SECRET)
-  });
-
   const { pathname } = req.nextUrl;
 
-  const isDashboard = pathname.startsWith("/dashboard");
-  const isAuthPage = pathname.startsWith("/auth");
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
 
-  if (isDashboard && !token) {
-    const loginUrl = new URL("/auth/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const isAuthRoute = pathname.startsWith("/auth");
+
+  // 🔥 prevent false-negative redirects during edge evaluation
+  const isStatic = pathname.startsWith("/_next") || pathname.includes(".");
+  if (isStatic) return NextResponse.next();
+
+  if (isDashboardRoute && !token) {
+    const url = new URL("/auth/login", req.url);
+    url.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(url);
   }
 
-  if (isAuthPage && token) {
+  if (isAuthRoute && token) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 

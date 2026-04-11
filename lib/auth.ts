@@ -6,7 +6,7 @@ import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "@/lib/mongodb-client";
 import bcrypt from "bcryptjs";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const authOptions = {
   adapter: MongoDBAdapter(clientPromise),
   providers: [
     GitHub({
@@ -75,7 +75,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
-        session.user.name = token.name;
+        session.user.name = token.name as string;
         session.user.email = token.email as string;
         session.user.image = token.picture as string;
       }
@@ -84,4 +84,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
-});
+};
+
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST };
