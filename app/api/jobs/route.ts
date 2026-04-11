@@ -45,6 +45,8 @@ export async function POST(req: NextRequest) {
 
     const session = await auth();
 
+    console.log("SESSION:", JSON.stringify(session));
+
     if (!session?.user?.email) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -54,10 +56,15 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
+    console.log("BODY:", JSON.stringify(body));
+    console.log("USER EMAIL:", session.user.email);
+
     const job = await Job.create({
       ...body,
       userEmail: session.user.email,
     });
+
+    console.log("SAVED JOB:", JSON.stringify(job));
 
     return NextResponse.json({ job }, { status: 201 });
   } catch (err) {
