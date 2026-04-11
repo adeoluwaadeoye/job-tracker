@@ -246,4 +246,4 @@ MIT — free to use, modify, and distribute.
 
 ---
 
-Built by [Your Name](https://github.com/adeoluwaadeoye)
+Built by [Adeoluwa Adeoye](https://github.com/adeoluwaadeoye)
