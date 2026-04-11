@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { Suspense, useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Briefcase, Mail, ArrowRight, RotateCcw } from "lucide-react";
 import Link from "next/link";
 
-export default function VerifyEmailPage() {
+function VerifyEmailForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") ?? "";
@@ -45,7 +45,6 @@ export default function VerifyEmailPage() {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // Auto submit when all filled
     if (value && index === 5 && newCode.every((d) => d !== "")) {
       handleVerify(newCode.join(""));
     }
@@ -92,13 +91,7 @@ export default function VerifyEmailPage() {
         return;
       }
 
-      // Auto sign in
-      await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
+      await signIn("credentials", { email, password, redirect: false });
       router.push("/dashboard");
     } catch {
       setError("Something went wrong. Please try again.");
@@ -137,21 +130,13 @@ export default function VerifyEmailPage() {
   };
 
   return (
-    <div className="w-full max-w-sm">
-      <div className="flex flex-col items-center mb-8">
-        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center mb-4">
-          <Briefcase className="w-5 h-5 text-primary-foreground" />
-        </div>
-        <h1 className="font-heading font-bold text-2xl tracking-tight">
-          Verify your email
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1 text-center">
-          We sent a 6-digit code to
-        </p>
-        <p className="text-sm font-semibold text-foreground mt-0.5">{email}</p>
-      </div>
+    <>
+      <p className="text-sm text-muted-foreground mt-1 text-center">
+        We sent a 6-digit code to
+      </p>
+      <p className="text-sm font-semibold text-foreground mt-0.5">{email}</p>
 
-      <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-5">
+      <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-5 mt-8">
         <div className="flex items-center justify-center gap-1">
           <Mail className="w-4 h-4 text-primary shrink-0" />
           <span className="text-xs text-muted-foreground">
@@ -159,7 +144,6 @@ export default function VerifyEmailPage() {
           </span>
         </div>
 
-        {/* OTP inputs */}
         <div className="flex gap-2 justify-center" onPaste={handlePaste}>
           {code.map((digit, index) => (
             <input
@@ -171,13 +155,12 @@ export default function VerifyEmailPage() {
               value={digit}
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              className={`w-11 h-13 text-center text-xl font-bold border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-all ${
-                error
+              className={`w-11 h-13 text-center text-xl font-bold border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-all ${error
                   ? "border-destructive focus:ring-destructive"
                   : digit
-                  ? "border-primary"
-                  : "border-border"
-              }`}
+                    ? "border-primary"
+                    : "border-border"
+                }`}
             />
           ))}
         </div>
@@ -237,6 +220,29 @@ export default function VerifyEmailPage() {
           Start over
         </Link>
       </p>
+    </>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <div className="w-full max-w-sm">
+      <div className="flex flex-col items-center mb-8">
+        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center mb-4">
+          <Briefcase className="w-5 h-5 text-primary-foreground" />
+        </div>
+        <h1 className="font-heading font-bold text-2xl tracking-tight">
+          Verify your email
+        </h1>
+
+        <Suspense fallback={
+          <div className="flex flex-col items-center gap-2 mt-1">
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          </div>
+        }>
+          <VerifyEmailForm />
+        </Suspense>
+      </div>
     </div>
   );
 }
