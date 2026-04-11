@@ -37,7 +37,7 @@ export default function LoginPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
         });
-        router.push(
+        router.replace(
           `/auth/verify-email?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
         );
         return;
