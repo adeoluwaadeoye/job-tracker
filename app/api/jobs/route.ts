@@ -54,35 +54,8 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    const {
-      title,
-      company,
-      location,
-      type,
-      skills,
-      summary,
-      coverLetter,
-      status,
-      rawDescription,
-    } = body;
-
-    if (!title || !company) {
-      return NextResponse.json(
-        { error: "Title and company required" },
-        { status: 400 }
-      );
-    }
-
     const job = await Job.create({
-      title,
-      company,
-      location,
-      type,
-      skills,
-      summary,
-      coverLetter,
-      status: status || "saved",
-      rawDescription: rawDescription || "",
+      ...body,
       userEmail: session.user.email,
     });
 
